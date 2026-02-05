@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --sidebar-width: 250px;
+            --header-height: 60px;
+            --transition-speed: 0.3s;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* ========== SIDEBAR STYLES ========== */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #3a0ca3 100%);
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1030; /* Ditingkatkan dari 1000 ke 1030 */
+            transition: all var(--transition-speed) ease;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar.collapsed .sidebar-header h3 {
+            display: none;
+        }
+        
+        .sidebar.collapsed .sidebar-header .toggle-btn {
+            margin: 0 auto;
+        }
+        
+        .sidebar.collapsed .dropdown-icon {
+            display: none !important;
+        }
+        
+        .sidebar-header {
+            padding: 20px 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            background: inherit;
+            z-index: 2;
+        }
+        
+        .sidebar-header .logo {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-header .logo i {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+        
+        .sidebar-header .toggle-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header .toggle-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+            position: relative;
+        }
+        
+        .nav-item {
+            margin-bottom: 2px;
+            position: relative;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border-left-color: white;
+        }
+        
+        .nav-link i {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .nav-link span {
+            font-weight: 500;
+            flex-grow: 1;
+        }
+        
+        .dropdown-icon {
+            transition: transform 0.3s;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+        
+        .nav-link[aria-expanded="true"] .dropdown-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* ========== SUBMENU STYLES ========== */
+        .submenu-container {
+            position: absolute;
+            left: 100%;
+            top: 0;
+            min-width: 220px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            z-index: 1050;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .submenu-container.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+        
+        .submenu-container .submenu {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+        
+        .submenu-container .submenu-item {
+            padding: 0;
+        }
+        
+        .submenu-container .submenu-link {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .submenu-container .submenu-link:hover,
+        .submenu-container .submenu-link.active {
+            background: rgba(67, 97, 238, 0.08);
+            color: var(--primary-color);
+            border-left-color: var(--primary-color);
+        }
+        
+        .submenu-container .submenu-link i {
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+        
+        /* Collapsed sidebar submenu positioning */
+        .sidebar.collapsed .submenu-container {
+            left: calc(100% + 10px);
+            top: 0;
+        }
+        
+        /* Desktop hover effect */
+        @media (min-width: 992px) {
+            .nav-item.has-submenu:hover .submenu-container {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Mobile submenu styles */
+        @media (max-width: 992px) {
+            .submenu-container {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                background: rgba(255,255,255,0.05);
+                border-radius: 0;
+                margin-left: 20px;
+                border-left: 1px solid rgba(255,255,255,0.1);
+                min-width: auto;
+            }
+            
+            .submenu-container.show {
+                display: block;
+            }
+            
+            .submenu-container .submenu-link {
+                color: rgba(255,255,255,0.8);
+                padding-left: 30px;
+            }
+            
+            .submenu-container .submenu-link:hover,
+            .submenu-container .submenu-link.active {
+                background: rgba(255,255,255,0.1);
+                color: white;
+            }
+        }
+        
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: inherit;
+            z-index: 2;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+        
+        .user-info img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background: white;
+            padding: 5px;
+        }
+        
+        .user-details {
+            flex-grow: 1;
+        }
+        
+        .user-details .name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            line-height: 1.2;
+        }
+        
+        .user-details .role {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        /* ========== MAIN CONTENT STYLES ========== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            z-index: 1; /* Lebih rendah dari sidebar */
+        }
+        
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+        
+        .top-header {
+            background: white;
+            height: var(--header-height);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1010; /* Lebih rendah dari sidebar */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+        }
+        
+        .breadcrumb {
+            background: transparent;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+        
+        .breadcrumb-item.active {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .notification-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .user-dropdown .dropdown-toggle {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+        
+        .user-dropdown .dropdown-toggle:after {
+            margin-left: 5px;
+        }
+        
+        .content-wrapper {
+            padding: 25px;
+            min-height: calc(100vh - var(--header-height));
+        }
+        
+        /* ========== STATS CARDS ========== */
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            height: 100%;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+        
+        .stats-icon.primary {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .stats-icon.success {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stats-icon.warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stats-icon.danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .stats-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* ========== CUSTOM CARD ========== */
+        .card-custom {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .card-custom .card-header {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        
+        .card-custom .card-body {
+            padding: 20px;
+        }
+        
+        /* ========== BUTTONS ========== */
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background: #3a0ca3;
+            border-color: #3a0ca3;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            border-color: var(--success-color);
+        }
+        
+        .btn-warning {
+            background: var(--warning-color);
+            border-color: var(--warning-color);
+            color: #333;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+        
+        .btn-info {
+            background: var(--info-color);
+            border-color: var(--info-color);
+        }
+        
+        /* ========== BADGES ========== */
+        .badge-primary {
+            background: var(--primary-color);
+        }
+        
+        .badge-success {
+            background: var(--success-color);
+        }
+        
+        .badge-warning {
+            background: var(--warning-color);
+            color: #333;
+        }
+        
+        .badge-danger {
+            background: var(--danger-color);
+        }
+        
+        /* ========== TABLE STYLES ========== */
+        .table-custom {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+        }
+        
+        .table-custom thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        /* ========== FORM STYLES ========== */
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        /* ========== ANIMATION ========== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .top-header {
+                padding: 0 15px;
+            }
+            
+            .content-wrapper {
+                padding: 15px;
+            }
+        }
+        
+        /* ========== DARK THEME ========== */
+        body[data-theme="dark"] {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        
+        body[data-theme="dark"] .top-header {
+            background: #1e1e1e;
+        }
+        
+        body[data-theme="dark"] .stats-card,
+        body[data-theme="dark"] .card-custom,
+        body[data-theme="dark"] .table-custom {
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
+        
+        body[data-theme="dark"] .card-custom .card-header {
+            background: #252525;
+            border-bottom-color: #333;
+        }
+        
+        body[data-theme="dark"] .table-custom thead th {
+            background: #252525;
+            color: #e0e0e0;
+        }
+        
+        body[data-theme="dark"] .form-control,
+        body[data-theme="dark"] .form-select {
+            background: #2d2d2d;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+        
+        /* Dark theme submenu */
+        body[data-theme="dark"] .submenu-container {
+            background: #252525;
+        }
+        
+        body[data-theme="dark"] .submenu-container .submenu-link {
+            color: #ccc;
+        }
+        
+        body[data-theme="dark"] .submenu-container .submenu-link:hover,
+        body[data-theme="dark"] .submenu-container .submenu-link.active {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+        
+        /* ========== CUSTOM SCROLLBAR ========== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        body[data-theme="dark"] ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+        
+        body[data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+        
+        body[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+        
+        /* ========== CONTENT MANAGER SPECIFIC ========== */
+        .content-category-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        
+        .category-ide {
+            background: rgba(255, 193, 7, 0.15);
+            color: #b58c00;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .category-stok {
+            background: rgba(40, 167, 69, 0.15);
+            color: #1e7e34;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+        
+        .category-skrip {
+            background: rgba(67, 97, 238, 0.15);
+            color: #2d50c9;
+            border: 1px solid rgba(67, 97, 238, 0.3);
+        }
+        
+        .category-strategi {
+            background: rgba(220, 53, 69, 0.15);
+            color: #c82333;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        
+        .category-tiktok {
+            background: rgba(0, 0, 0, 0.15);
+            color: #000;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+        }
+        
+        .category-reels {
+            background: rgba(253, 29, 29, 0.15);
+            color: #d62d20;
+            border: 1px solid rgba(253, 29, 29, 0.3);
+        }
+        
+        /* ========== CONTENT ACTIONS ========== */
+        .content-actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .content-actions .btn {
+            padding: 4px 8px;
+            font-size: 0.85rem;
+        }
+        
+        /* ========== PRIORITY BADGES ========== */
+        .priority-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .priority-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .priority-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .priority-low {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        /* ========== STATUS BADGES ========== */
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        /* ========== LOADING ANIMATION ========== */
+        .loading-spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 0.25em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+        
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ========== TOAST NOTIFICATION ========== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1055;
+        }
+        
+        /* ========== BACKDROP FOR MOBILE ========== */
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1029;
+            display: none;
+        }
+        
+        .sidebar-backdrop.show {
+            display: block;
+        }
+        
+        /* ========== CLOSE BUTTON FOR MOBILE ========== */
+        .sidebar-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: none;
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar-close {
+                display: block;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-theme="light">
+    <!-- Backdrop for Mobile -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-close" id="sidebarClose">
+            <i class="bi bi-x"></i>
+        </button>
+        
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="bi bi-robot"></i>
+            </div>
+            <h3>Affiliate Pro</h3>
+            <button class="toggle-btn" id="sidebarToggle">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-menu">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                
+                <!-- Content Management Section dengan Submenu -->
+                <li class="nav-item has-submenu">
+                    <a class="nav-link {% if request.endpoint in ['content_manager', 'ide_manager', 'stok_manager', 'skrip_manager', 'strategi_manager', 'manage'] %}active{% endif %}" 
+                       href="#"
+                       id="contentMenuLink">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Content Manager</span>
+                        <i class="bi bi-chevron-down dropdown-icon"></i>
+                    </a>
+                    
+                    <!-- Submenu Container -->
+                    <div class="submenu-container" id="contentSubmenu">
+                        <ul class="submenu">
+                            <li class="submenu-item">
+                                <a class="submenu-link {% if request.endpoint == 'content_manager' %}active{% endif %}" 
+                                   href="{{ url_for('content_manager') }}">
+                                    <i class="bi bi-grid"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="submenu-item">
+                                <a class="submenu-link {% if request.endpoint == 'ide_manager' %}active{% endif %}" 
+                                   href="{{ url_for('ide_manager') }}">
+                                    <i class="bi bi-lightbulb text-warning"></i>
+                                    <span>Ide Manager</span>
+                                </a>
+                            </li>
+                            <li class="submenu-item">
+                                <a class="submenu-link {% if request.endpoint == 'stok_manager' %}active{% endif %}" 
+                                   href="{{ url_for('stok_manager') }}">
+                                    <i class="bi bi-box-seam text-success"></i>
+                                    <span>Stok Manager</span>
+                                </a>
+                            </li>
+                            <li class="submenu-item">
+                                <a class="submenu-link {% if request.endpoint == 'skrip_manager' %}active{% endif %}" 
+                                   href="{{ url_for('skrip_manager') }}">
+                                    <i class="bi bi-file-text text-primary"></i>
+                                    <span>Skrip Manager</span>
+                                </a>
+                            </li>
+                            <li class="submenu-item">
+                                <a class="submenu-link {% if request.endpoint == 'strategi_manager' %}active{% endif %}" 
+                                   href="{{ url_for('strategi_manager') }}">
+                                    <i class="bi bi-diagram-3 text-danger"></i>
+                                    <span>Strategi Manager</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'ai_assistant' %}active{% endif %}" href="{{ url_for('ai_assistant') }}">
+                        <i class="bi bi-robot"></i>
+                        <span>AI Assistant</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'tasks' %}active{% endif %}" href="{{ url_for('tasks') }}">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Task Manager</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'daily_notes' %}active{% endif %}" href="{{ url_for('daily_notes') }}">
+                        <i class="bi bi-journal-text"></i>
+                        <span>Daily Notes</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">
+                        <i class="bi bi-calendar-event"></i>
+                        <span>Calendar</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'statistics' %}active{% endif %}" href="{{ url_for('statistics') }}">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Statistics</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'integrations' %}active{% endif %}" href="{{ url_for('integrations') }}">
+                        <i class="bi bi-plug"></i>
+                        <span>Integrations</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'search' %}active{% endif %}" href="{{ url_for('search') }}">
+                        <i class="bi bi-search"></i>
+                        <span>Search</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-details">
+                    <div class="name">{{ session.get('username', 'User') }}</div>
+                    <div class="role">{{ session.get('user_role', 'User') }}</div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="bi bi-person"></i> Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('notifications') }}">
+                            <i class="bi bi-bell"></i> Notifications
+                            {% if unread_notifications > 0 %}
+                            <span class="badge bg-danger ms-2">{{ unread_notifications }}</span>
+                            {% endif %}
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('system_info') }}">
+                            <i class="bi bi-info-circle"></i> System Info
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Header -->
+        <div class="top-header">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+                    {% block breadcrumb %}{% endblock %}
+                </ol>
+            </nav>
+            
+            <div class="header-actions">
+                <button class="notification-btn" id="notificationBtn" data-bs-toggle="dropdown">
+                    <i class="bi bi-bell"></i>
+                    {% if unread_notifications > 0 %}
+                    <span class="notification-badge">{{ unread_notifications }}</span>
+                    {% endif %}
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="width: 300px;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Notifications</h6>
+                        {% if unread_notifications > 0 %}
+                        <a href="{{ url_for('notifications') }}?mark_read=all" class="btn btn-sm btn-link">Mark all read</a>
+                        {% endif %}
+                    </div>
+                    <div class="notification-list">
+                        {% with notifications = get_flashed_messages(with_categories=true) %}
+                            {% if notifications %}
+                                {% for category, message in notifications %}
+                                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-2" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center mb-0">No new notifications</p>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="text-center mt-2">
+                        <a href="{{ url_for('notifications') }}" class="btn btn-sm btn-primary">View All</a>
+                    </div>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="bi bi-moon"></i>
+                </button>
+                
+                <div class="dropdown user-dropdown">
+                    <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        <span>{{ session.get('username', 'User') }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="bi bi-person me-2"></i> Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('notifications') }}">
+                            <i class="bi bi-bell me-2"></i> Notifications
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Wrapper -->
+        <div class="content-wrapper fade-in">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Main Content Block -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+    
+    <!-- Mobile Sidebar Toggle -->
+    <button class="btn btn-primary d-lg-none position-fixed bottom-0 end-0 m-3 rounded-circle shadow-lg" 
+            id="mobileSidebarToggle" 
+            style="width: 50px; height: 50px; z-index: 1010;">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Sidebar Elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarToggleIcon = sidebarToggle.querySelector('i');
+        const sidebarClose = document.getElementById('sidebarClose');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+        const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+        
+        // Submenu Elements
+        const contentMenuLink = document.getElementById('contentMenuLink');
+        const contentSubmenu = document.getElementById('contentSubmenu');
+        
+        // ========== SIDEBAR TOGGLE ==========
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                sidebarToggleIcon.classList.remove('bi-chevron-left');
+                sidebarToggleIcon.classList.add('bi-chevron-right');
+                // Close submenu when sidebar collapses
+                contentSubmenu.classList.remove('show');
+            } else {
+                sidebarToggleIcon.classList.remove('bi-chevron-right');
+                sidebarToggleIcon.classList.add('bi-chevron-left');
+            }
+        });
+        
+        // ========== MOBILE SIDEBAR HANDLING ==========
+        function openMobileSidebar() {
+            sidebar.classList.add('show');
+            sidebarBackdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileSidebar() {
+            sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
+            document.body.style.overflow = '';
+            // Close submenu on mobile when closing sidebar
+            contentSubmenu.classList.remove('show');
+        }
+        
+        mobileSidebarToggle.addEventListener('click', openMobileSidebar);
+        sidebarClose.addEventListener('click', closeMobileSidebar);
+        sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+        
+        // ========== SUBMENU HANDLING ==========
+        // Toggle submenu on click
+        contentMenuLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close other open submenus if any
+            const openSubmenus = document.querySelectorAll('.submenu-container.show');
+            openSubmenus.forEach(menu => {
+                if (menu !== contentSubmenu) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // Toggle current submenu
+            contentSubmenu.classList.toggle('show');
+        });
+        
+        // Close submenu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!contentMenuLink.contains(e.target) && !contentSubmenu.contains(e.target)) {
+                contentSubmenu.classList.remove('show');
+            }
+        });
+        
+        // Desktop hover behavior
+        if (window.innerWidth >= 992) {
+            contentMenuLink.addEventListener('mouseenter', function() {
+                contentSubmenu.classList.add('show');
+            });
+            
+            sidebar.addEventListener('mouseleave', function() {
+                contentSubmenu.classList.remove('show');
+            });
+            
+            contentSubmenu.addEventListener('mouseleave', function() {
+                contentSubmenu.classList.remove('show');
+            });
+        }
+        
+        // Close submenu on mobile when clicking a link
+        if (window.innerWidth < 992) {
+            document.querySelectorAll('.submenu-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    contentSubmenu.classList.remove('show');
+                    closeMobileSidebar();
+                });
+            });
+        }
+        
+        // ========== THEME TOGGLE ==========
+        const themeToggle = document.getElementById('themeToggle');
+        const themeToggleIcon = themeToggle.querySelector('i');
+        const body = document.body;
+        
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            body.setAttribute('data-theme', newTheme);
+            
+            if (newTheme === 'dark') {
+                themeToggleIcon.classList.remove('bi-moon');
+                themeToggleIcon.classList.add('bi-sun');
+            } else {
+                themeToggleIcon.classList.remove('bi-sun');
+                themeToggleIcon.classList.add('bi-moon');
+            }
+            
+            // Save theme preference
+            localStorage.setItem('theme', newTheme);
+        });
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        body.setAttribute('data-theme', savedTheme);
+        
+        if (savedTheme === 'dark') {
+            themeToggleIcon.classList.remove('bi-moon');
+            themeToggleIcon.classList.add('bi-sun');
+        }
+        
+        // ========== AUTO-HIDE ALERTS ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+        
+        // ========== ACTIVE MENU HIGHLIGHTING ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar-menu .nav-link');
+            const submenuLinks = document.querySelectorAll('.submenu-link');
+            
+            // Check main nav links
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Check submenu links
+            submenuLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                    // Open parent submenu if needed
+                    const parentSubmenu = link.closest('.submenu-container');
+                    if (parentSubmenu) {
+                        parentSubmenu.classList.add('show');
+                    }
+                }
+            });
+        });
+        
+        // ========== NOTIFICATION POLLING ==========
+        function checkNotifications() {
+            fetch('/api/notifications/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.querySelector('.notification-badge');
+                    const notificationBtn = document.getElementById('notificationBtn');
+                    
+                    if (data.count > 0) {
+                        if (!badge) {
+                            const newBadge = document.createElement('span');
+                            newBadge.className = 'notification-badge';
+                            newBadge.textContent = data.count;
+                            notificationBtn.appendChild(newBadge);
+                        } else {
+                            badge.textContent = data.count;
+                        }
+                    } else if (badge) {
+                        badge.remove();
+                    }
+                })
+                .catch(error => console.error('Error checking notifications:', error));
+        }
+        
+        // Check notifications every 30 seconds
+        setInterval(checkNotifications, 30000);
+        
+        // ========== TOAST NOTIFICATION FUNCTION ==========
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast align-items-center text-white bg-' + 
+                (type === 'success' ? 'success' : 
+                 type === 'error' ? 'danger' : 
+                 type === 'warning' ? 'warning' : 'primary') + 
+                ' border-0';
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.id = toastId;
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+            
+            toast.addEventListener('hidden.bs.toast', function () {
+                toast.remove();
+            });
+        }
+        
+        // Expose showToast to global scope
+        window.showToast = showToast;
+        
+        // ========== KEYBOARD SHORTCUTS ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + K for search
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                window.location.href = '/search';
+            }
+            
+            // Esc to close sidebar on mobile
+            if (e.key === 'Escape' && window.innerWidth < 992) {
+                closeMobileSidebar();
+            }
+            
+            // Esc to close modals
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                });
+            }
+        });
+        
+        // ========== RESPONSIVE ADJUSTMENTS ==========
+        function handleResize() {
+            if (window.innerWidth >= 992) {
+                // Desktop: Close mobile backdrop
+                sidebarBackdrop.classList.remove('show');
+                document.body.style.overflow = '';
+            } else {
+                // Mobile: Ensure sidebar is hidden by default
+                sidebar.classList.remove('show');
+                sidebarBackdrop.classList.remove('show');
+            }
+        }
+        
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Initial check
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,970 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="manage-content">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 fw-bold text-primary">
+                        <i class="bi bi-pencil-square"></i> Kelola Konten
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="/dashboard" class="text-decoration-none">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="/dashboard" class="text-decoration-none">
+                                    Akun Affiliate
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                <strong>{{ account }}</strong> - {{ category }}
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#statsModal">
+                        <i class="bi bi-bar-chart"></i> Statistik
+                    </button>
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="bi bi-upload"></i> Import
+                    </button>
+                    <a href="/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Total Konten</h6>
+                    <h2 class="mb-0">{{ data|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Terbaru</h6>
+                    <h6 class="mb-0">
+                        {% if data %}
+                            {{ data[0][2][:10] if data[0][2] else '-' }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Karakter</h6>
+                    <h6 class="mb-0">
+                        {% if data %}
+                            {% set total_chars = 0 %}
+                            {% for item in data %}
+                                {% set total_chars = total_chars + item[1]|length %}
+                            {% endfor %}
+                            {{ total_chars }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Kata</h6>
+                    <h6 class="mb-0">
+                        {% if data %}
+                            {% set total_words = 0 %}
+                            {% for item in data %}
+                                {% set words = item[1].split() %}
+                                {% set total_words = total_words + words|length %}
+                            {% endfor %}
+                            {{ total_words }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Form Input -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-gradient bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Tambah Konten Baru
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" id="contentForm">
+                        <div class="mb-3">
+                            <label for="text" class="form-label">
+                                <i class="bi bi-textarea-t"></i> Konten
+                                <span class="badge bg-info float-end" id="charCount">0 karakter</span>
+                            </label>
+                            <textarea class="form-control" 
+                                      id="text" 
+                                      name="text" 
+                                      rows="8" 
+                                      placeholder="Masukkan konten disini..."
+                                      required
+                                      oninput="updateCharCount()"></textarea>
+                            <div class="form-text">
+                                Masukkan konten yang ingin disimpan. Konten akan tersimpan secara permanen.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">
+                                <i class="bi bi-tags"></i> Tags (opsional)
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="tags" 
+                                   name="tags" 
+                                   placeholder="contoh: viral, tutorial, review">
+                            <div class="form-text">
+                                Pisahkan tags dengan koma. Maksimal 5 tags.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">
+                                <i class="bi bi-flag"></i> Prioritas
+                            </label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="normal" selected>⚪ Normal</option>
+                                <option value="important">🔴 Penting</option>
+                                <option value="urgent">🟢 Urgent</option>
+                                <option value="low">🟡 Rendah</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-x-circle"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Simpan Konten
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Konten -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul"></i> Daftar Konten
+                        <span class="badge bg-primary ms-2">{{ data|length }}</span>
+                    </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="sortContent('newest')">
+                            <i class="bi bi-sort-down"></i> Terbaru
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="sortContent('oldest')">
+                            <i class="bi bi-sort-up"></i> Terlama
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="filterContent('all')">
+                            <i class="bi bi-filter"></i> Semua
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if data %}
+                    <div class="list-group" id="contentList">
+                        {% for item in data %}
+                        <div class="list-group-item border-0 mb-3 shadow-sm content-item" 
+                             data-id="{{ item[0] }}"
+                             data-date="{{ item[2] }}"
+                             data-priority="normal">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span class="badge bg-secondary me-2">
+                                                #{{ loop.index }}
+                                            </span>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i> 
+                                                {{ item[2] if item[2] else 'Tanpa tanggal' }}
+                                            </small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary btn-sm edit-btn" 
+                                                    data-id="{{ item[0] }}"
+                                                    data-content="{{ item[1]|replace('"', '&quot;')|replace("'", "&#39;") }}"
+                                                    data-tags="{{ item[3] if item[3] else '' }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success btn-sm copy-btn" 
+                                                    data-content="{{ item[1] }}">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-sm preview-btn" 
+                                                    data-content="{{ item[1] }}">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <a href="{{ url_for('delete_content', id=item[0]) }}" 
+                                               class="btn btn-outline-danger btn-sm"
+                                               onclick="return confirm('Hapus konten ini?')">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="content-text mb-2">
+                                        {% set content = item[1] %}
+                                        {% if content|length > 300 %}
+                                            <span class="short-text" id="short-{{ item[0] }}">
+                                                {{ content[:300] }}...
+                                                <a href="javascript:void(0)" class="read-more" onclick="toggleReadMore({{ item[0] }})">
+                                                    <i class="bi bi-chevron-down"></i> Baca selengkapnya
+                                                </a>
+                                            </span>
+                                            <span class="full-text" id="full-{{ item[0] }}" style="display: none;">
+                                                {{ content }}
+                                                <a href="javascript:void(0)" class="read-less" onclick="toggleReadLess({{ item[0] }})">
+                                                    <i class="bi bi-chevron-up"></i> Sembunyikan
+                                                </a>
+                                            </span>
+                                        {% else %}
+                                            {{ content }}
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if item[3] %}
+                                    <div class="tags-container mt-2">
+                                        {% set tags = item[3].split(',') %}
+                                        {% for tag in tags %}
+                                            {% if tag.strip() %}
+                                            <span class="badge bg-info me-1 mb-1">
+                                                <i class="bi bi-tag"></i> {{ tag.strip() }}
+                                            </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="content-stats mt-2">
+                                        <small class="text-muted me-3">
+                                            <i class="bi bi-fonts"></i> {{ item[1]|length }} karakter
+                                        </small>
+                                        <small class="text-muted me-3">
+                                            <i class="bi bi-text-paragraph"></i> 
+                                            {% set words = item[1].split() %}
+                                            {{ words|length }} kata
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock-history"></i> 
+                                            {% if item[2] %}
+                                                {{ item[2]|calculate_time_ago }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if total_pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page-1 }}{% if search %}&search={{ search }}{% endif %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for p in range(1, total_pages + 1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}">{{ p }}</a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if page < total_pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page+1 }}{% if search %}&search={{ search }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h5 class="mt-3">Belum ada konten</h5>
+                        <p class="text-muted">Mulai tambahkan konten menggunakan form di samping</p>
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('text').focus()">
+                            <i class="bi bi-plus"></i> Tambah Konten Pertama
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Export -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-download"></i> Export Konten
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Format Export</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportFormat" id="formatTxt" value="txt" checked>
+                        <label class="form-check-label" for="formatTxt">
+                            <i class="bi bi-file-text"></i> File Text (.txt)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportFormat" id="formatJson" value="json">
+                        <label class="form-check-label" for="formatJson">
+                            <i class="bi bi-file-code"></i> JSON (.json)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportFormat" id="formatCsv" value="csv">
+                        <label class="form-check-label" for="formatCsv">
+                            <i class="bi bi-file-spreadsheet"></i> CSV (.csv)
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Pilihan Konten</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeAll" checked>
+                        <label class="form-check-label" for="includeAll">
+                            Semua konten ({{ data|length }} item)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeDate">
+                        <label class="form-check-label" for="includeDate">
+                            Sertakan tanggal
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeTags">
+                        <label class="form-check-label" for="includeTags">
+                            Sertakan tags
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="exportRange" class="form-label">Rentang Tanggal</label>
+                    <div class="row">
+                        <div class="col">
+                            <input type="date" class="form-control" id="startDate">
+                        </div>
+                        <div class="col">
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Batal
+                </button>
+                <a href="{{ url_for('export', account=account, category=category) }}" 
+                   class="btn btn-success" id="exportBtn">
+                    <i class="bi bi-download"></i> Export Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Stats -->
+<div class="modal fade" id="statsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-bar-chart"></i> Statistik Konten
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Distribusi Karakter</h6>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar" role="progressbar" style="width: 25%">
+                                Pendek (&lt;100)
+                            </div>
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 35%">
+                                Sedang (100-500)
+                            </div>
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 40%">
+                                Panjang (&gt;500)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Aktivitas Harian</h6>
+                        <div class="d-flex align-items-center justify-content-center" style="height: 100px;">
+                            <p class="text-muted">Chart tidak tersedia</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Konten per Hari</h6>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Hari</th>
+                                    <th>Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Senin</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Selasa</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Rabu</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Kamis</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Jumat</td>
+                                    <td>0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Top Tags</h6>
+                        <div id="tagsCloud" class="tags-cloud">
+                            {% if data %}
+                                {% set all_tags = [] %}
+                                {% for item in data %}
+                                    {% if item[3] %}
+                                        {% set tags = item[3].split(',') %}
+                                        {% for tag in tags %}
+                                            {% if tag.strip() %}
+                                                {% set _ = all_tags.append(tag.strip()) %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if all_tags %}
+                                    {% for tag in all_tags[:10] %}
+                                        <span class="tag-cloud-item" style="font-size: {{ 12 + loop.index * 2 }}px;">
+                                            {{ tag }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted">Belum ada tags</p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Import -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-upload"></i> Import Konten
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="importForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">File Import</label>
+                        <input class="form-control" type="file" id="importFile" accept=".txt,.json,.csv">
+                        <div class="form-text">
+                            Format yang didukung: TXT, JSON, CSV
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Opsi Import</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="overwriteData">
+                            <label class="form-check-label" for="overwriteData">
+                                Timpa data yang ada
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="addTags" checked>
+                            <label class="form-check-label" for="addTags">
+                                Tambahkan tags default
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="defaultTags" class="form-label">Tags Default</label>
+                        <input type="text" class="form-control" id="defaultTags" 
+                               placeholder="imported,{{ category|lower }},{{ account|lower }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-upload"></i> Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Preview -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-eye"></i> Preview Konten
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-content" id="previewContent" style="white-space: pre-wrap;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Tutup
+                </button>
+                <button type="button" class="btn btn-primary" onclick="copyPreviewContent()">
+                    <i class="bi bi-clipboard"></i> Salin
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square"></i> Edit Konten
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editForm" action="/update_content" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="editId" name="id">
+                    <div class="mb-3">
+                        <label for="editText" class="form-label">Konten</label>
+                        <textarea class="form-control" id="editText" name="text" rows="6" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTags" class="form-label">Tags</label>
+                        <input type="text" class="form-control" id="editTags" name="tags">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPriority" class="form-label">Prioritas</label>
+                        <select class="form-select" id="editPriority" name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="important">Penting</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="low">Rendah</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.content-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid #dee2e6 !important;
+}
+
+.content-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    border-left-color: var(--primary-color) !important;
+}
+
+.content-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.read-more, .read-less {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.read-more:hover, .read-less:hover {
+    text-decoration: underline;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    min-height: 100px;
+    align-items: center;
+    justify-content: center;
+}
+
+.tag-cloud-item {
+    padding: 5px 10px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.tag-cloud-item:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.preview-content {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.sticky-top {
+    z-index: 100;
+}
+
+@media (max-width: 992px) {
+    .sticky-top {
+        position: static !important;
+    }
+}
+
+.char-counter {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+</style>
+
+<script>
+// Character counter
+function updateCharCount() {
+    const textarea = document.getElementById('text');
+    const charCount = document.getElementById('charCount');
+    const count = textarea.value.length;
+    charCount.textContent = count + ' karakter';
+    
+    // Change color based on length
+    if (count > 1000) {
+        charCount.className = 'badge bg-danger float-end';
+    } else if (count > 500) {
+        charCount.className = 'badge bg-warning float-end';
+    } else {
+        charCount.className = 'badge bg-info float-end';
+    }
+}
+
+// Toggle read more/less
+function toggleReadMore(id) {
+    document.getElementById('short-' + id).style.display = 'none';
+    document.getElementById('full-' + id).style.display = 'block';
+}
+
+function toggleReadLess(id) {
+    document.getElementById('full-' + id).style.display = 'none';
+    document.getElementById('short-' + id).style.display = 'block';
+}
+
+// Sort content
+function sortContent(type) {
+    const items = Array.from(document.querySelectorAll('.content-item'));
+    
+    items.sort((a, b) => {
+        const dateA = new Date(a.dataset.date);
+        const dateB = new Date(b.dataset.date);
+        
+        if (type === 'newest') {
+            return dateB - dateA;
+        } else {
+            return dateA - dateB;
+        }
+    });
+    
+    const container = document.getElementById('contentList');
+    container.innerHTML = '';
+    items.forEach(item => container.appendChild(item));
+    
+    showToast(`Diurutkan berdasarkan ${type === 'newest' ? 'terbaru' : 'terlama'}`, 'info');
+}
+
+// Filter content
+function filterContent(filter) {
+    const items = document.querySelectorAll('.content-item');
+    
+    items.forEach(item => {
+        if (filter === 'all' || item.dataset.priority === filter) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    showToast(`Menampilkan ${filter === 'all' ? 'semua' : filter} konten`, 'info');
+}
+
+// Copy preview content
+function copyPreviewContent() {
+    const content = document.getElementById('previewContent').textContent;
+    navigator.clipboard.writeText(content).then(() => {
+        showToast('Preview konten berhasil disalin!', 'success');
+    });
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toastEl = document.createElement('div');
+    toastEl.className = 'toast align-items-center text-white bg-' + (type === 'error' ? 'danger' : type) + ' border-0 position-fixed bottom-0 end-0 m-3';
+    toastEl.role = 'alert';
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toastEl);
+    
+    // Initialize and show toast
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+    
+    // Remove toast after hidden
+    toastEl.addEventListener('hidden.bs.toast', function () {
+        document.body.removeChild(toastEl);
+    });
+}
+
+// Export functionality
+document.getElementById('exportBtn').addEventListener('click', function(e) {
+    const format = document.querySelector('input[name="exportFormat"]:checked').value;
+    const includeDate = document.getElementById('includeDate').checked;
+    const includeTags = document.getElementById('includeTags').checked;
+    
+    let url = this.href;
+    url += `?format=${format}&date=${includeDate}&tags=${includeTags}`;
+    
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (startDate && endDate) {
+        url += `&start=${startDate}&end=${endDate}`;
+    }
+    
+    this.href = url;
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize character count
+    updateCharCount();
+    
+    // Set current date for export
+    const today = new Date().toISOString().split('T')[0];
+    if (document.getElementById('startDate')) {
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+    }
+    
+    // Copy button functionality
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const content = this.dataset.content;
+            navigator.clipboard.writeText(content).then(() => {
+                showToast('Konten berhasil disalin!', 'success');
+            });
+        });
+    });
+    
+    // Preview button functionality
+    document.querySelectorAll('.preview-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const content = this.dataset.content;
+            document.getElementById('previewContent').textContent = content;
+            const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+            previewModal.show();
+        });
+    });
+    
+    // Edit button functionality
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const content = this.dataset.content;
+            const tags = this.dataset.tags;
+            
+            document.getElementById('editId').value = id;
+            document.getElementById('editText').value = content;
+            document.getElementById('editTags').value = tags;
+            
+            const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            editModal.show();
+        });
+    });
+    
+    // Edit form submission
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Konten berhasil diupdate', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Gagal mengupdate konten: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Terjadi kesalahan: ' + error, 'error');
+        });
+    });
+    
+    // Import form submission
+    if (document.getElementById('importForm')) {
+        document.getElementById('importForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showToast('Fitur import dalam pengembangan', 'info');
+        });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl + Enter to submit form
+        if (e.ctrlKey && e.key === 'Enter' && document.activeElement.tagName === 'TEXTAREA') {
+            document.getElementById('contentForm').submit();
+        }
+        
+        // Esc to close modals
+        if (e.key === 'Escape') {
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                bootstrap.Modal.getInstance(modal).hide();
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

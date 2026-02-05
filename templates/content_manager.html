@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-manager">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 fw-bold text-primary">
+                <i class="bi bi-pencil-square"></i> Content Manager
+            </h1>
+            <p class="text-muted mb-0">Kelola konten untuk semua akun affiliate</p>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Menu -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('ide_manager') }}" class="text-decoration-none">
+                                <div class="p-3 rounded bg-warning bg-opacity-10 hover-scale">
+                                    <i class="bi bi-lightbulb-fill display-4 text-warning"></i>
+                                    <h5 class="mt-2 mb-1">Ide Manager</h5>
+                                    <p class="text-muted small mb-0">Kelola ide kreatif</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('stok_manager') }}" class="text-decoration-none">
+                                <div class="p-3 rounded bg-success bg-opacity-10 hover-scale">
+                                    <i class="bi bi-box-seam-fill display-4 text-success"></i>
+                                    <h5 class="mt-2 mb-1">Stok Manager</h5>
+                                    <p class="text-muted small mb-0">Kelola stok konten</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('skrip_manager') }}" class="text-decoration-none">
+                                <div class="p-3 rounded bg-primary bg-opacity-10 hover-scale">
+                                    <i class="bi bi-file-text-fill display-4 text-primary"></i>
+                                    <h5 class="mt-2 mb-1">Skrip Manager</h5>
+                                    <p class="text-muted small mb-0">Kelola skrip konten</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('strategi_manager') }}" class="text-decoration-none">
+                                <div class="p-3 rounded bg-danger bg-opacity-10 hover-scale">
+                                    <i class="bi bi-diagram-3-fill display-4 text-danger"></i>
+                                    <h5 class="mt-2 mb-1">Strategi Manager</h5>
+                                    <p class="text-muted small mb-0">Kelola strategi konten</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accounts Grid -->
+    <div class="row">
+        {% for account in accounts %}
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-gradient bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge"></i> {{ account }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- IDE -->
+                        <div class="col-md-6">
+                            <div class="category-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-lightbulb"></i> Ide
+                                    </h6>
+                                    <span class="badge bg-secondary">
+                                        {% set count_key = account + "_Ide" %}
+                                        {{ counts_dict.get(count_key, 0) }}
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    {{ counts_dict.get(account + "_Ide", 0) }} ide tersimpan
+                                </p>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('manage', account=account, category='Ide') }}" 
+                                       class="btn btn-outline-warning btn-sm">
+                                        <i class="bi bi-pencil-square"></i> Kelola
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- STOK -->
+                        <div class="col-md-6">
+                            <div class="category-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-box-seam"></i> Stok
+                                    </h6>
+                                    <span class="badge bg-secondary">
+                                        {% set count_key = account + "_Stok" %}
+                                        {{ counts_dict.get(count_key, 0) }}
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    {{ counts_dict.get(account + "_Stok", 0) }} stok tersimpan
+                                </p>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('manage', account=account, category='Stok') }}" 
+                                       class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-pencil-square"></i> Kelola
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- SKRIP -->
+                        <div class="col-md-6">
+                            <div class="category-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-file-text"></i> Skrip
+                                    </h6>
+                                    <span class="badge bg-secondary">
+                                        {% set count_key = account + "_Skrip" %}
+                                        {{ counts_dict.get(count_key, 0) }}
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    {{ counts_dict.get(account + "_Skrip", 0) }} skrip tersimpan
+                                </p>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('manage', account=account, category='Skrip') }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil-square"></i> Kelola
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- STRATEGI -->
+                        <div class="col-md-6">
+                            <div class="category-card p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-diagram-3"></i> Strategi
+                                    </h6>
+                                    <span class="badge bg-secondary">
+                                        {% set count_key = account + "_Strategi" %}
+                                        {{ counts_dict.get(count_key, 0) }}
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    {{ counts_dict.get(account + "_Strategi", 0) }} strategi tersimpan
+                                </p>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('manage', account=account, category='Strategi') }}" 
+                                       class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-pencil-square"></i> Kelola
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.category-card {
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.category-card:nth-child(1):hover {
+    border-color: var(--warning-color) !important;
+}
+
+.category-card:nth-child(2):hover {
+    border-color: var(--success-color) !important;
+}
+
+.category-card:nth-child(3):hover {
+    border-color: var(--primary-color) !important;
+}
+
+.category-card:nth-child(4):hover {
+    border-color: var(--danger-color) !important;
+}
+
+.category-card h6 {
+    color: #333;
+    font-weight: 600;
+}
+
+.category-card .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.category-card p {
+    font-size: 0.85rem;
+    min-height: 40px;
+}
+
+.card-header.bg-gradient {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+}
+
+.hover-scale {
+    transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+/* Warna icon berbeda untuk setiap kategori */
+.category-card:nth-child(1) .bi-lightbulb { color: #ffc107; }
+.category-card:nth-child(2) .bi-box-seam { color: #28a745; }
+.category-card:nth-child(3) .bi-file-text { color: #007bff; }
+.category-card:nth-child(4) .bi-diagram-3 { color: #dc3545; }
+</style>
+{% endblock %}

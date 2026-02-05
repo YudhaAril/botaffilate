@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold text-primary">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </h1>
+            <p class="lead">Selamat datang, {{ session.username }}! Kelola konten affiliate Anda dengan mudah.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Konten</h6>
+                            <h2 class="mb-0">{{ total_content }}</h2>
+                        </div>
+                        <i class="bi bi-file-text display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Tasks Pending</h6>
+                            <h2 class="mb-0">{{ pending_tasks }}</h2>
+                        </div>
+                        <i class="bi bi-list-task display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Notes</h6>
+                            <h2 class="mb-0">{{ total_notes }}</h2>
+                        </div>
+                        <i class="bi bi-journal-text display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Akun Affiliate</h6>
+                            <h2 class="mb-0">{{ accounts|length }}</h2>
+                        </div>
+                        <i class="bi bi-people display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <a href="/content-manager" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-pencil-square fs-1 mb-2"></i>
+                                <span>Content Manager</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/daily-notes" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-journal-text fs-1 mb-2"></i>
+                                <span>Daily Notes</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/tasks" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-check-circle fs-1 mb-2"></i>
+                                <span>Task Manager</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/search" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                <i class="bi bi-search fs-1 mb-2"></i>
+                                <span>Search</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Content & Today's Note -->
+    <div class="row">
+        <!-- Recent Content -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Konten Terbaru</h5>
+                    <a href="/content-manager" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_content %}
+                    <div class="list-group list-group-flush">
+                        {% for content in recent_content %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <span class="badge bg-info me-2">{{ content.account }}</span>
+                                        {{ content.category }}
+                                    </h6>
+                                    <p class="mb-1 text-muted small">
+                                        {{ content.text[:100] }}{% if content.text|length > 100 %}...{% endif %}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock"></i> {{ content.created_at|format_datetime }}
+                                    </small>
+                                </div>
+                                <a href="{{ url_for('manage', account=content.account, category=content.category) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <p class="mt-3">Belum ada konten</p>
+                        <a href="/content-manager" class="btn btn-primary">
+                            <i class="bi bi-plus"></i> Tambah Konten
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Note -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-calendar-day"></i> Catatan Hari Ini</h5>
+                    <a href="/daily-notes" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if today_note %}
+                    <div class="today-note">
+                        <p>{{ today_note[0]|nl2br|safe }}</p>
+                        <small class="text-muted">{{ today }}</small>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-journal-text display-1 text-muted"></i>
+                        <p class="mt-3">Belum ada catatan hari ini</p>
+                        <a href="/daily-notes" class="btn btn-success">
+                            <i class="bi bi-plus"></i> Buat Catatan
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Categories -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Top Kategori</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_categories %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Kategori</th>
+                                    <th>Jumlah Konten</th>
+                                    <th>Persentase</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category, count in top_categories %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-tag me-2"></i>{{ category }}
+                                    </td>
+                                    <td>{{ count }}</td>
+                                    <td>{{ (count/total_content*100)|round(1) }}%</td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar" 
+                                                 style="width: {{ (count/total_content*100)|round(1) }}%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted">Belum ada data kategori</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.today-note {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.today-note p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.quick-actions .btn {
+    transition: all 0.3s ease;
+    border: 2px solid;
+}
+
+.quick-actions .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    background-color: #4361ee;
+    border-radius: 4px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update time ago for recent content
+    document.querySelectorAll('.time-ago').forEach(element => {
+        const dateText = element.textContent;
+        element.textContent = AppUtils.formatDate(dateText, 'relative');
+    });
+    
+    // Setup quick stats refresh (every 5 minutes)
+    setInterval(() => {
+        // You could add AJAX call here to refresh stats
+        console.log('Stats refresh interval');
+    }, 300000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="skrip-manager">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 fw-bold text-primary">
+                        <i class="bi bi-file-text-fill"></i> Manajer Skrip Konten
+                    </h1>
+                    <p class="text-muted mb-0">Kelola skrip konten untuk semua akun affiliate</p>
+                </div>
+                <div>
+                    <a href="/content-manager" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali ke Content Manager
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Total Skrip</h6>
+                    <h2 class="mb-0">{{ skrip_data|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Akun Aktif</h6>
+                    <h2 class="mb-0">{{ skrip_counts|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Skrip Terbaru</h6>
+                    <h6 class="mb-0">
+                        {% if skrip_data %}
+                            {{ skrip_data[0][3][:10] if skrip_data[0][3] else '-' }}
+                        {% else %}
+                            - 
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Rata-rata per Akun</h6>
+                    <h6 class="mb-0">
+                        {% if skrip_data|length > 0 and skrip_counts|length > 0 %}
+                            {{ (skrip_data|length / skrip_counts|length)|round|int }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Form Input -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-gradient bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Tambah Skrip Baru
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/add_skrip" id="skripForm">
+                        <div class="mb-3">
+                            <label for="account" class="form-label">
+                                <i class="bi bi-person-badge"></i> Pilih Akun
+                            </label>
+                            <select class="form-select" id="account" name="account" required>
+                                <option value="">-- Pilih Akun --</option>
+                                {% for account in accounts %}
+                                <option value="{{ account }}">{{ account }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="text" class="form-label">
+                                <i class="bi bi-file-text"></i> Konten Skrip
+                                <span class="badge bg-info float-end" id="charCount">0 karakter</span>
+                            </label>
+                            <textarea class="form-control" 
+                                      id="text" 
+                                      name="text" 
+                                      rows="8" 
+                                      placeholder="Masukkan skrip konten di sini..."
+                                      required
+                                      oninput="updateCharCount()"></textarea>
+                            <div class="form-text">
+                                Skrip bisa berupa naskah video, caption, atau script siap pakai.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">
+                                <i class="bi bi-tags"></i> Kategori Skrip
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="tags" 
+                                   name="tags" 
+                                   placeholder="contoh: video, caption, reels, tiktok">
+                            <div class="form-text">
+                                Pisahkan kategori dengan koma. Contoh: video, caption, reels, tutorial
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">
+                                <i class="bi bi-flag"></i> Status Skrip
+                            </label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="draft">🟡 Draft (Perlu revisi)</option>
+                                <option value="ready" selected>⚪ Siap Pakai</option>
+                                <option value="priority">🔴 Prioritas (Siap shooting)</option>
+                                <option value="published">🟢 Sudah Dipublikasikan</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-x-circle"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Simpan Skrip
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Skrip -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-text"></i> Daftar Skrip
+                        <span class="badge bg-primary ms-2">{{ skrip_data|length }}</span>
+                    </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="filterByAccount('all')">
+                            Semua Akun
+                        </button>
+                        {% for count in skrip_counts %}
+                        <button class="btn btn-sm btn-outline-secondary" onclick="filterByAccount('{{ count[0] }}')">
+                            {{ count[0] }} ({{ count[1] }})
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if skrip_data %}
+                    <div class="list-group" id="skripList">
+                        {% for item in skrip_data %}
+                        <div class="list-group-item border-0 mb-3 shadow-sm skrip-item" 
+                             data-account="{{ item[1] }}"
+                             data-date="{{ item[3] }}"
+                             data-priority="{{ item[5] }}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span class="badge bg-primary me-2">
+                                                <i class="bi bi-file-text"></i> SKRIP
+                                            </span>
+                                            <span class="badge bg-secondary">
+                                                {{ item[1] }}
+                                            </span>
+                                            <small class="text-muted ms-2">
+                                                <i class="bi bi-clock"></i> {{ item[3]|calculate_time_ago }}
+                                            </small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary btn-sm copy-btn" 
+                                                    data-content="{{ item[2] }}">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-sm preview-btn" 
+                                                    data-content="{{ item[2] }}">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <a href="{{ url_for('delete_skrip', id=item[0]) }}" 
+                                               class="btn btn-outline-danger btn-sm"
+                                               onclick="return confirm('Hapus skrip ini?')">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="skrip-content mb-2">
+                                        {% if item[2]|length > 300 %}
+                                            <span class="short-text" id="short-{{ item[0] }}">
+                                                {{ item[2][:300] }}...
+                                                <a href="javascript:void(0)" class="read-more" onclick="toggleReadMore({{ item[0] }})">
+                                                    <i class="bi bi-chevron-down"></i> Baca selengkapnya
+                                                </a>
+                                            </span>
+                                            <span class="full-text" id="full-{{ item[0] }}" style="display: none;">
+                                                {{ item[2] }}
+                                                <a href="javascript:void(0)" class="read-less" onclick="toggleReadLess({{ item[0] }})">
+                                                    <i class="bi bi-chevron-up"></i> Sembunyikan
+                                                </a>
+                                            </span>
+                                        {% else %}
+                                            {{ item[2] }}
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if item[4] %}
+                                    <div class="tags-container mt-2">
+                                        {% set tags = item[4].split(',') %}
+                                        {% for tag in tags %}
+                                            {% if tag.strip() %}
+                                            <span class="badge bg-info me-1 mb-1">
+                                                <i class="bi bi-tag"></i> {{ tag.strip() }}
+                                            </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="content-stats mt-2">
+                                        <small class="text-muted me-3">
+                                            <i class="bi bi-fonts"></i> {{ item[2]|length }} karakter
+                                        </small>
+                                        <small class="text-muted me-3">
+                                            <i class="bi bi-text-paragraph"></i> 
+                                            {% set words = item[2].split() %}
+                                            {{ words|length }} kata
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="bi bi-flag"></i> 
+                                            {% if item[5] == 'published' %}
+                                                <span class="text-success">Sudah Dipublikasikan</span>
+                                            {% elif item[5] == 'priority' %}
+                                                <span class="text-warning">Prioritas</span>
+                                            {% elif item[5] == 'draft' %}
+                                                <span class="text-secondary">Draft</span>
+                                            {% else %}
+                                                <span class="text-primary">Siap Pakai</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-file-text display-1 text-muted"></i>
+                        <h5 class="mt-3">Belum ada skrip</h5>
+                        <p class="text-muted">Mulai tambahkan skrip konten pertama Anda</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Account Statistics -->
+            {% if skrip_counts %}
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-gradient bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart"></i> Statistik Skrip per Akun
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for count in skrip_counts %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title text-truncate">{{ count[0] }}</h6>
+                                    <h4 class="text-primary">{{ count[1] }}</h4>
+                                    <small class="text-muted">skrip</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.skrip-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid #007bff !important;
+}
+
+.skrip-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,123,255,0.1) !important;
+}
+
+.skrip-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.read-more, .read-less {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.read-more:hover, .read-less:hover {
+    text-decoration: underline;
+}
+
+.bg-gradient.bg-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+</style>
+
+<script>
+function updateCharCount() {
+    const textarea = document.getElementById('text');
+    const charCount = document.getElementById('charCount');
+    const count = textarea.value.length;
+    charCount.textContent = count + ' karakter';
+    
+    if (count > 1000) {
+        charCount.className = 'badge bg-danger float-end';
+    } else if (count > 500) {
+        charCount.className = 'badge bg-warning float-end';
+    } else {
+        charCount.className = 'badge bg-info float-end';
+    }
+}
+
+function filterByAccount(account) {
+    const items = document.querySelectorAll('.skrip-item');
+    
+    items.forEach(item => {
+        if (account === 'all' || item.dataset.account === account) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    showToast(`Menampilkan skrip dari ${account === 'all' ? 'semua akun' : account}`, 'info');
+}
+
+function toggleReadMore(id) {
+    document.getElementById('short-' + id).style.display = 'none';
+    document.getElementById('full-' + id).style.display = 'block';
+}
+
+function toggleReadLess(id) {
+    document.getElementById('full-' + id).style.display = 'none';
+    document.getElementById('short-' + id).style.display = 'block';
+}
+
+function showToast(message, type = 'info') {
+    const toastEl = document.createElement('div');
+    toastEl.className = 'toast align-items-center text-white bg-' + (type === 'error' ? 'danger' : type) + ' border-0 position-fixed bottom-0 end-0 m-3';
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toastEl);
+    const bsToast = new bootstrap.Toast(toastEl, { delay: 2000 });
+    bsToast.show();
+    
+    toastEl.addEventListener('hidden.bs.toast', function () {
+        document.body.removeChild(toastEl);
+    });
+}
+
+// Copy button functionality
+document.addEventListener('DOMContentLoaded', function() {
+    updateCharCount();
+    
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const content = this.dataset.content;
+            navigator.clipboard.writeText(content).then(() => {
+                showToast('Skrip berhasil disalin!', 'success');
+            });
+        });
+    });
+    
+    // Preview button functionality
+    document.querySelectorAll('.preview-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const content = this.dataset.content;
+            
+            // Create preview modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'previewModal';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-eye"></i> Preview Skrip
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="preview-content" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">
+                                ${content}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Tutup
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="navigator.clipboard.writeText('${content.replace(/'/g, "\\'")}').then(() => showToast('Skrip disalin!', 'success'))">
+                                <i class="bi bi-clipboard"></i> Salin
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const previewModal = new bootstrap.Modal(modal);
+            previewModal.show();
+            
+            modal.addEventListener('hidden.bs.modal', function () {
+                document.body.removeChild(modal);
+            });
+        });
+    });
+    
+    // Auto-focus textarea
+    document.getElementById('text').focus();
+});
+</script>
+{% endblock %}

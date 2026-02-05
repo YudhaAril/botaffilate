@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="h3 fw-bold text-primary mb-4">
+        <i class="bi bi-info-circle"></i> System Information
+    </h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Application Info</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>App Name:</th>
+                            <td>{{ app_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Python Version:</th>
+                            <td>{{ info.python_version }}</td>
+                        </tr>
+                        <tr>
+                            <th>Platform:</th>
+                            <td>{{ info.platform }}</td>
+                        </tr>
+                        <tr>
+                            <th>Flask Version:</th>
+                            <td>{{ info.flask_version }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Database Stats</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Database Size:</th>
+                            <td>{{ "%.2f"|format(info.database_size/1024/1024) }} MB</td>
+                        </tr>
+                        <tr>
+                            <th>Total Content:</th>
+                            <td>{{ info.content_count }}</td>
+                        </tr>
+                        <tr>
+                            <th>Daily Notes:</th>
+                            <td>{{ info.notes_count }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tasks:</th>
+                            <td>{{ info.tasks_count }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-white">
+            <h5 class="mb-0">System Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <a href="/backup" class="btn btn-success w-100">
+                        <i class="bi bi-download"></i> Backup Data
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#restoreModal">
+                        <i class="bi bi-upload"></i> Restore Data
+                    </button>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/clear_cache" class="btn btn-info w-100">
+                        <i class="bi bi-trash"></i> Clear Cache
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/export_all" class="btn btn-primary w-100">
+                        <i class="bi bi-file-arrow-down"></i> Export All
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Modal -->
+<div class="modal fade" id="restoreModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Restore Backup</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/restore" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="backupFile" class="form-label">Pilih File Backup (.json)</label>
+                        <input class="form-control" type="file" id="backupFile" name="backup_file" accept=".json">
+                        <div class="form-text">
+                            Pilih file backup yang sebelumnya sudah diexport.
+                            <strong class="text-danger">PERINGATAN:</strong> Data saat ini akan ditimpa!
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning">Restore</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

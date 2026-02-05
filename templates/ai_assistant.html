@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ai-assistant-page">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 fw-bold text-primary">
+                <i class="bi bi-robot"></i> AI Content Assistant
+            </h1>
+            <p class="text-muted mb-0">Generate content dengan bantuan AI</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Input Panel -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-square-text"></i> Input Prompt
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/ai-assistant">
+                        <div class="mb-3">
+                            <label class="form-label">What would you like to create?</label>
+                            <textarea class="form-control" name="prompt" rows="5" 
+                                      placeholder="Contoh: 'Tips affiliate marketing untuk pemula'"
+                                      required>{{ prompt if prompt else '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Content Type</label>
+                            <select name="action" class="form-select" required>
+                                <option value="caption" {% if action == 'caption' %}selected{% endif %}>Social Media Caption</option>
+                                <option value="script" {% if action == 'script' %}selected{% endif %}>Video Script</option>
+                                <option value="idea" {% if action == 'idea' %}selected{% endif %}>Content Idea</option>
+                                <option value="hashtag" {% if action == 'hashtag' %}selected{% endif %}>Hashtag Suggestions</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tone</label>
+                            <select name="tone" class="form-select" required>
+                                <option value="professional" {% if tone == 'professional' %}selected{% endif %}>Professional</option>
+                                <option value="casual" {% if tone == 'casual' %}selected{% endif %}>Casual</option>
+                                <option value="friendly" {% if tone == 'friendly' %}selected{% endif %}>Friendly</option>
+                                <option value="motivational" {% if tone == 'motivational' %}selected{% endif %}>Motivational</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Target Platform</label>
+                            <select name="platform" class="form-select" required>
+                                <option value="Instagram" {% if platform == 'Instagram' %}selected{% endif %}>Instagram</option>
+                                <option value="TikTok" {% if platform == 'TikTok' %}selected{% endif %}>TikTok</option>
+                                <option value="YouTube" {% if platform == 'YouTube' %}selected{% endif %}>YouTube</option>
+                                <option value="Facebook" {% if platform == 'Facebook' %}selected{% endif %}>Facebook</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-magic"></i> Generate Content
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-text"></i> Generated Content
+                    </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="copyGeneratedContent()">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="saveGeneratedContent()">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if generated_content %}
+                    <div class="generated-content p-3 border rounded bg-light">
+                        <pre style="white-space: pre-wrap; font-family: inherit;">{{ generated_content }}</pre>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>Quick Actions:</h6>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-info" onclick="useAsCaption()">
+                                Use as Caption
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="useAsScript()">
+                                Use as Script
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="regenerateContent()">
+                                Regenerate
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-robot text-muted fs-1"></i>
+                        <p class="mt-3">No content generated yet</p>
+                        <p class="text-muted small">Enter a prompt and click "Generate Content"</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Examples -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightbulb"></i> Prompt Examples
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6>Caption Examples</h6>
+                                    <ul class="small">
+                                        <li>"Promo khusus hari ini"</li>
+                                        <li>"Tips produktif bekerja"</li>
+                                        <li>"Review produk terbaru"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6>Script Examples</h6>
+                                    <ul class="small">
+                                        <li>"Tutorial penggunaan produk"</li>
+                                        <li>"Cerita sukses affiliate"</li>
+                                        <li>"Q&A seputar marketing"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6>Idea Examples</h6>
+                                    <ul class="small">
+                                        <li>"Content calendar 7 hari"</li>
+                                        <li>"Ide konten viral"</li>
+                                        <li>"Strategi engagement"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6>Hashtag Examples</h6>
+                                    <ul class="small">
+                                        <li>"#affiliatemarketing"</li>
+                                        <li>"#digitalmarketing"</li>
+                                        <li>"#bisnisonline"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.generated-content {
+    min-height: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+pre {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+</style>
+
+<script>
+function copyGeneratedContent() {
+    const content = document.querySelector('.generated-content pre');
+    if (content) {
+        navigator.clipboard.writeText(content.textContent).then(() => {
+            showToast('Content copied to clipboard!', 'success');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            showToast('Failed to copy content', 'error');
+        });
+    }
+}
+
+function saveGeneratedContent() {
+    const content = document.querySelector('.generated-content pre');
+    if (content) {
+        // Save to content manager
+        const modal = new bootstrap.Modal(document.getElementById('saveContentModal'));
+        modal.show();
+    }
+}
+
+function useAsCaption() {
+    const content = document.querySelector('.generated-content pre');
+    if (content) {
+        window.location.href = `/content-manager?caption=${encodeURIComponent(content.textContent)}`;
+    }
+}
+
+function useAsScript() {
+    const content = document.querySelector('.generated-content pre');
+    if (content) {
+        window.location.href = `/content-manager?script=${encodeURIComponent(content.textContent)}`;
+    }
+}
+
+function regenerateContent() {
+    document.querySelector('form').submit();
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast
+    const toastId = 'toast-' + Date.now();
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast align-items-center text-bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove toast after it's hidden
+    toast.addEventListener('hidden.bs.toast', function () {
+        toast.remove();
+    });
+}
+
+// Auto-focus textarea
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.querySelector('textarea[name="prompt"]');
+    if (textarea) {
+        textarea.focus();
+    }
+});
+</script>
+
+<!-- Modal Save Content -->
+<div class="modal fade" id="saveContentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Save to Content Manager</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/content-manager/save-ai" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Account</label>
+                        <select name="account" class="form-select" required>
+                            <option value="">Choose account...</option>
+                            {% for account in accounts %}
+                            <option value="{{ account }}">{{ account }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Category</label>
+                        <select name="category" class="form-select" required>
+                            <option value="">Choose category...</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <input type="hidden" name="content" id="aiContent">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Content</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set content to hidden input before modal shows
+document.getElementById('saveContentModal').addEventListener('show.bs.modal', function () {
+    const content = document.querySelector('.generated-content pre');
+    if (content) {
+        document.getElementById('aiContent').value = content.textContent;
+    }
+});
+</script>
+{% endblock %}

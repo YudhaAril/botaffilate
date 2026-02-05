@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="stok-manager">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 fw-bold text-success">
+                        <i class="bi bi-box-seam-fill"></i> Manajer Stok Konten
+                    </h1>
+                    <p class="text-muted mb-0">Kelola stok konten siap pakai dari semua akun affiliate</p>
+                </div>
+                <div>
+                    <a href="/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Total Stok</h6>
+                    <h2 class="mb-0">{{ stok_data|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Akun Aktif</h6>
+                    <h2 class="mb-0">{{ stok_counts|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Stok Terbaru</h6>
+                    <h6 class="mb-0">
+                        {% if stok_data %}
+                            {{ stok_data[0][2][:10] if stok_data[0][2] else '-' }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Rata-rata per Akun</h6>
+                    <h6 class="mb-0">
+                        {% if stok_data|length > 0 and stok_counts|length > 0 %}
+                            {{ (stok_data|length / stok_counts|length)|round|int }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Form Input -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-gradient bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Tambah Stok Baru
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/add_stok" id="stokForm">
+                        <div class="mb-3">
+                            <label for="account" class="form-label">
+                                <i class="bi bi-person-badge"></i> Pilih Akun
+                            </label>
+                            <select class="form-select" id="account" name="account" required>
+                                <option value="">-- Pilih Akun --</option>
+                                {% for account in accounts %}
+                                <option value="{{ account }}">{{ account }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="text" class="form-label">
+                                <i class="bi bi-box-seam"></i> Konten Stok
+                                <span class="badge bg-info float-end" id="charCount">0 karakter</span>
+                            </label>
+                            <textarea class="form-control" 
+                                      id="text" 
+                                      name="text" 
+                                      rows="8" 
+                                      placeholder="Masukkan konten stok di sini..."
+                                      required
+                                      oninput="updateCharCount()"></textarea>
+                            <div class="form-text">
+                                Konten stok adalah konten yang siap digunakan kapan saja. Bisa berupa caption, script, atau konten jadi.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">
+                                <i class="bi bi-tags"></i> Kategori Stok
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="tags" 
+                                   name="tags" 
+                                   placeholder="contoh: caption, script, video, gambar">
+                            <div class="form-text">
+                                Pisahkan kategori dengan koma. Contoh: caption, script, reels, tiktok
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">
+                                <i class="bi bi-flag"></i> Status Stok
+                            </label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="low">🟡 Draft (Perlu revisi)</option>
+                                <option value="normal" selected>⚪ Siap Pakai</option>
+                                <option value="important">🔴 Prioritas (Siap posting)</option>
+                                <option value="urgent">🟢 Hot (Trending topic)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-x-circle"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-save"></i> Simpan Stok
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Stok -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-box-seam"></i> Daftar Stok Konten
+                        <span class="badge bg-success ms-2">{{ stok_data|length }}</span>
+                    </h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-success" onclick="filterByAccount('all')">
+                            Semua Akun
+                        </button>
+                        {% for count in stok_counts %}
+                        <button class="btn btn-sm btn-outline-secondary" onclick="filterByAccount('{{ count[0] }}')">
+                            {{ count[0] }} ({{ count[1] }})
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if stok_data %}
+                    <div class="list-group" id="stokList">
+                        {% for item in stok_data %}
+                        <div class="list-group-item border-0 mb-3 shadow-sm stok-item" 
+                             data-account="{{ item[0] }}"
+                             data-date="{{ item[2] }}"
+                             data-priority="{{ item[4] }}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span class="badge bg-success me-2">
+                                                <i class="bi bi-box-seam"></i> STOK
+                                            </span>
+                                            <span class="badge bg-secondary">
+                                                {{ item[0] }}
+                                            </span>
+                                            <small class="text-muted ms-2">
+                                                <i class="bi bi-clock"></i> {{ item[2]|calculate_time_ago }}
+                                            </small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-success btn-sm copy-btn" 
+                                                    data-content="{{ item[1] }}">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <a href="{{ url_for('delete_content', id=item[0]) }}" 
+                                               class="btn btn-outline-danger btn-sm"
+                                               onclick="return confirm('Hapus stok ini?')">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="stok-content mb-2">
+                                        {{ item[1] }}
+                                    </div>
+                                    
+                                    {% if item[3] %}
+                                    <div class="tags-container mt-2">
+                                        {% set tags = item[3].split(',') %}
+                                        {% for tag in tags %}
+                                            {% if tag.strip() %}
+                                            <span class="badge bg-info me-1 mb-1">
+                                                <i class="bi bi-tag"></i> {{ tag.strip() }}
+                                            </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="content-stats mt-2">
+                                        <small class="text-muted me-3">
+                                            <i class="bi bi-fonts"></i> {{ item[1]|length }} karakter
+                                        </small>
+                                        <small class="text-muted me-3">
+                                            <i class="bi bi-text-paragraph"></i> 
+                                            {% set words = item[1].split() %}
+                                            {{ words|length }} kata
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="bi bi-flag"></i> 
+                                            {% if item[4] == 'urgent' %}
+                                                <span class="text-danger">HOT</span>
+                                            {% elif item[4] == 'important' %}
+                                                <span class="text-warning">Prioritas</span>
+                                            {% elif item[4] == 'low' %}
+                                                <span class="text-secondary">Draft</span>
+                                            {% else %}
+                                                <span class="text-success">Siap Pakai</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-box-seam display-1 text-muted"></i>
+                        <h5 class="mt-3">Belum ada stok konten</h5>
+                        <p class="text-muted">Mulai tambahkan stok konten pertama Anda</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Account Statistics -->
+            {% if stok_counts %}
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-gradient bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart"></i> Statistik Stok per Akun
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for count in stok_counts %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title text-truncate">{{ count[0] }}</h6>
+                                    <h4 class="text-success">{{ count[1] }}</h4>
+                                    <small class="text-muted">stok</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.stok-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid #28a745 !important;
+}
+
+.stok-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40,167,69,0.1) !important;
+}
+
+.stok-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.bg-gradient.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+</style>
+
+<script>
+function updateCharCount() {
+    const textarea = document.getElementById('text');
+    const charCount = document.getElementById('charCount');
+    const count = textarea.value.length;
+    charCount.textContent = count + ' karakter';
+    
+    if (count > 1000) {
+        charCount.className = 'badge bg-danger float-end';
+    } else if (count > 500) {
+        charCount.className = 'badge bg-warning float-end';
+    } else {
+        charCount.className = 'badge bg-info float-end';
+    }
+}
+
+function filterByAccount(account) {
+    const items = document.querySelectorAll('.stok-item');
+    
+    items.forEach(item => {
+        if (account === 'all' || item.dataset.account === account) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Show notification
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                Menampilkan stok dari ${account === 'all' ? 'semua akun' : account}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast, { delay: 2000 });
+    bsToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', function () {
+        document.body.removeChild(toast);
+    });
+}
+
+// Copy button functionality
+document.addEventListener('DOMContentLoaded', function() {
+    updateCharCount();
+    
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const content = this.dataset.content;
+            navigator.clipboard.writeText(content).then(() => {
+                // Show success message
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            Stok konten berhasil disalin!
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+                
+                document.body.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast, { delay: 2000 });
+                bsToast.show();
+                
+                toast.addEventListener('hidden.bs.toast', function () {
+                    document.body.removeChild(toast);
+                });
+            });
+        });
+    });
+    
+    // Auto-focus textarea
+    document.getElementById('text').focus();
+});
+</script>
+{% endblock %}
