@@ -52,7 +52,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            z-index: 1030; /* Ditingkatkan dari 1000 ke 1030 */
+            z-index: 1030;
             transition: all var(--transition-speed) ease;
             box-shadow: 3px 0 15px rgba(0,0,0,0.1);
             overflow-y: auto;
@@ -76,6 +76,10 @@
         
         .sidebar.collapsed .dropdown-icon {
             display: none !important;
+        }
+        
+        .sidebar.collapsed .nav-link.has-dropdown:after {
+            display: none;
         }
         
         .sidebar-header {
@@ -164,114 +168,95 @@
             flex-grow: 1;
         }
         
-        .dropdown-icon {
+        /* Dropdown arrow */
+        .nav-link.has-dropdown {
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .nav-link.has-dropdown:after {
+            content: '\f282';
+            font-family: 'Bootstrap Icons';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
             transition: transform 0.3s;
             font-size: 0.8rem;
-            margin-left: auto;
         }
         
-        .nav-link[aria-expanded="true"] .dropdown-icon {
-            transform: rotate(180deg);
+        .nav-link.has-dropdown[aria-expanded="true"]:after {
+            transform: translateY(-50%) rotate(180deg);
         }
         
-        /* ========== SUBMENU STYLES ========== */
-        .submenu-container {
-            position: absolute;
-            left: 100%;
-            top: 0;
-            min-width: 220px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
-            z-index: 1050;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
-        }
-        
-        .submenu-container.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(0);
-        }
-        
-        .submenu-container .submenu {
-            list-style: none;
-            padding: 10px 0;
+        /* ========== DROPDOWN MENU STYLES ========== */
+        .dropdown-menu-sidebar {
+            position: static;
+            float: none;
+            width: 100%;
             margin: 0;
-        }
-        
-        .submenu-container .submenu-item {
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: none;
             padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
         }
         
-        .submenu-container .submenu-link {
-            padding: 10px 20px;
+        .dropdown-menu-sidebar.show {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .dropdown-menu-sidebar .dropdown-item {
+            color: rgba(255,255,255,0.8);
+            padding: 10px 20px 10px 50px;
             display: flex;
             align-items: center;
-            color: #495057;
-            text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.3s;
             border-left: 3px solid transparent;
+            text-decoration: none;
         }
         
-        .submenu-container .submenu-link:hover,
-        .submenu-container .submenu-link.active {
-            background: rgba(67, 97, 238, 0.08);
-            color: var(--primary-color);
-            border-left-color: var(--primary-color);
+        .dropdown-menu-sidebar .dropdown-item:hover,
+        .dropdown-menu-sidebar .dropdown-item.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: white;
         }
         
-        .submenu-container .submenu-link i {
+        .dropdown-menu-sidebar .dropdown-item i {
             margin-right: 10px;
             font-size: 1rem;
         }
         
-        /* Collapsed sidebar submenu positioning */
-        .sidebar.collapsed .submenu-container {
-            left: calc(100% + 10px);
+        /* Untuk sidebar collapsed */
+        .sidebar.collapsed .dropdown-menu-sidebar {
+            display: none !important;
+        }
+        
+        /* Jika ingin dropdown muncul di samping saat collapsed */
+        .sidebar.collapsed .nav-item:hover .dropdown-menu-sidebar {
+            display: block !important;
+            position: absolute;
+            left: 100%;
             top: 0;
+            width: 200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            max-height: none;
         }
         
-        /* Desktop hover effect */
-        @media (min-width: 992px) {
-            .nav-item.has-submenu:hover .submenu-container {
-                opacity: 1;
-                visibility: visible;
-                transform: translateX(0);
-            }
+        .sidebar.collapsed .dropdown-menu-sidebar .dropdown-item {
+            color: #495057;
+            padding: 10px 15px;
         }
         
-        /* Mobile submenu styles */
-        @media (max-width: 992px) {
-            .submenu-container {
-                position: static;
-                opacity: 1;
-                visibility: visible;
-                transform: none;
-                box-shadow: none;
-                background: rgba(255,255,255,0.05);
-                border-radius: 0;
-                margin-left: 20px;
-                border-left: 1px solid rgba(255,255,255,0.1);
-                min-width: auto;
-            }
-            
-            .submenu-container.show {
-                display: block;
-            }
-            
-            .submenu-container .submenu-link {
-                color: rgba(255,255,255,0.8);
-                padding-left: 30px;
-            }
-            
-            .submenu-container .submenu-link:hover,
-            .submenu-container .submenu-link.active {
-                background: rgba(255,255,255,0.1);
-                color: white;
-            }
+        .sidebar.collapsed .dropdown-menu-sidebar .dropdown-item:hover {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
         }
         
         .sidebar-footer {
@@ -320,7 +305,7 @@
             min-height: 100vh;
             transition: all var(--transition-speed) ease;
             position: relative;
-            z-index: 1; /* Lebih rendah dari sidebar */
+            z-index: 1;
         }
         
         .main-content.expanded {
@@ -333,7 +318,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
-            z-index: 1010; /* Lebih rendah dari sidebar */
+            z-index: 1010;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -631,19 +616,9 @@
             color: #e0e0e0;
         }
         
-        /* Dark theme submenu */
-        body[data-theme="dark"] .submenu-container {
-            background: #252525;
-        }
-        
-        body[data-theme="dark"] .submenu-container .submenu-link {
-            color: #ccc;
-        }
-        
-        body[data-theme="dark"] .submenu-container .submenu-link:hover,
-        body[data-theme="dark"] .submenu-container .submenu-link.active {
-            background: rgba(255,255,255,0.05);
-            color: white;
+        /* Dark theme dropdown */
+        body[data-theme="dark"] .dropdown-menu-sidebar {
+            background: rgba(0, 0, 0, 0.2);
         }
         
         /* ========== CUSTOM SCROLLBAR ========== */
@@ -870,56 +845,56 @@
                     </a>
                 </li>
                 
-                <!-- Content Management Section dengan Submenu -->
-                <li class="nav-item has-submenu">
-                    <a class="nav-link {% if request.endpoint in ['content_manager', 'ide_manager', 'stok_manager', 'skrip_manager', 'strategi_manager', 'manage'] %}active{% endif %}" 
+                <!-- Content Management Section dengan Dropdown Bootstrap -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link has-dropdown dropdown-toggle {% if request.endpoint in ['content_manager', 'ide_manager', 'stok_manager', 'skrip_manager', 'strategi_manager', 'manage'] %}active{% endif %}" 
                        href="#"
-                       id="contentMenuLink">
+                       id="contentManagerDropdown"
+                       role="button"
+                       data-bs-toggle="dropdown"
+                       aria-expanded="false">
                         <i class="bi bi-pencil-square"></i>
                         <span>Content Manager</span>
-                        <i class="bi bi-chevron-down dropdown-icon"></i>
                     </a>
                     
-                    <!-- Submenu Container -->
-                    <div class="submenu-container" id="contentSubmenu">
-                        <ul class="submenu">
-                            <li class="submenu-item">
-                                <a class="submenu-link {% if request.endpoint == 'content_manager' %}active{% endif %}" 
-                                   href="{{ url_for('content_manager') }}">
-                                    <i class="bi bi-grid"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </li>
-                            <li class="submenu-item">
-                                <a class="submenu-link {% if request.endpoint == 'ide_manager' %}active{% endif %}" 
-                                   href="{{ url_for('ide_manager') }}">
-                                    <i class="bi bi-lightbulb text-warning"></i>
-                                    <span>Ide Manager</span>
-                                </a>
-                            </li>
-                            <li class="submenu-item">
-                                <a class="submenu-link {% if request.endpoint == 'stok_manager' %}active{% endif %}" 
-                                   href="{{ url_for('stok_manager') }}">
-                                    <i class="bi bi-box-seam text-success"></i>
-                                    <span>Stok Manager</span>
-                                </a>
-                            </li>
-                            <li class="submenu-item">
-                                <a class="submenu-link {% if request.endpoint == 'skrip_manager' %}active{% endif %}" 
-                                   href="{{ url_for('skrip_manager') }}">
-                                    <i class="bi bi-file-text text-primary"></i>
-                                    <span>Skrip Manager</span>
-                                </a>
-                            </li>
-                            <li class="submenu-item">
-                                <a class="submenu-link {% if request.endpoint == 'strategi_manager' %}active{% endif %}" 
-                                   href="{{ url_for('strategi_manager') }}">
-                                    <i class="bi bi-diagram-3 text-danger"></i>
-                                    <span>Strategi Manager</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    <!-- Dropdown Menu -->
+                    <ul class="dropdown-menu dropdown-menu-sidebar" aria-labelledby="contentManagerDropdown">
+                        <li>
+                            <a class="dropdown-item {% if request.endpoint == 'content_manager' %}active{% endif %}" 
+                               href="{{ url_for('content_manager') }}">
+                                <i class="bi bi-grid"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if request.endpoint == 'ide_manager' %}active{% endif %}" 
+                               href="{{ url_for('ide_manager') }}">
+                                <i class="bi bi-lightbulb text-warning"></i>
+                                Ide Manager
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if request.endpoint == 'stok_manager' %}active{% endif %}" 
+                               href="{{ url_for('stok_manager') }}">
+                                <i class="bi bi-box-seam text-success"></i>
+                                Stok Manager
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if request.endpoint == 'skrip_manager' %}active{% endif %}" 
+                               href="{{ url_for('skrip_manager') }}">
+                                <i class="bi bi-file-text text-primary"></i>
+                                Skrip Manager
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {% if request.endpoint == 'strategi_manager' %}active{% endif %}" 
+                               href="{{ url_for('strategi_manager') }}">
+                                <i class="bi bi-diagram-3 text-danger"></i>
+                                Strategi Manager
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 
                 <li class="nav-item">
@@ -1120,10 +1095,6 @@
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
         const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
         
-        // Submenu Elements
-        const contentMenuLink = document.getElementById('contentMenuLink');
-        const contentSubmenu = document.getElementById('contentSubmenu');
-        
         // ========== SIDEBAR TOGGLE ==========
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('collapsed');
@@ -1132,8 +1103,8 @@
             if (sidebar.classList.contains('collapsed')) {
                 sidebarToggleIcon.classList.remove('bi-chevron-left');
                 sidebarToggleIcon.classList.add('bi-chevron-right');
-                // Close submenu when sidebar collapses
-                contentSubmenu.classList.remove('show');
+                // Close all dropdowns when sidebar collapses
+                closeAllDropdowns();
             } else {
                 sidebarToggleIcon.classList.remove('bi-chevron-right');
                 sidebarToggleIcon.classList.add('bi-chevron-left');
@@ -1151,61 +1122,72 @@
             sidebar.classList.remove('show');
             sidebarBackdrop.classList.remove('show');
             document.body.style.overflow = '';
-            // Close submenu on mobile when closing sidebar
-            contentSubmenu.classList.remove('show');
+            // Close all dropdowns when closing sidebar on mobile
+            closeAllDropdowns();
         }
         
         mobileSidebarToggle.addEventListener('click', openMobileSidebar);
         sidebarClose.addEventListener('click', closeMobileSidebar);
         sidebarBackdrop.addEventListener('click', closeMobileSidebar);
         
-        // ========== SUBMENU HANDLING ==========
-        // Toggle submenu on click
-        contentMenuLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Close other open submenus if any
-            const openSubmenus = document.querySelectorAll('.submenu-container.show');
-            openSubmenus.forEach(menu => {
-                if (menu !== contentSubmenu) {
-                    menu.classList.remove('show');
-                }
+        // ========== DROPDOWN HANDLING ==========
+        function closeAllDropdowns() {
+            const dropdowns = document.querySelectorAll('.dropdown-menu-sidebar');
+            dropdowns.forEach(dropdown => {
+                dropdown.classList.remove('show');
             });
             
-            // Toggle current submenu
-            contentSubmenu.classList.toggle('show');
-        });
-        
-        // Close submenu when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!contentMenuLink.contains(e.target) && !contentSubmenu.contains(e.target)) {
-                contentSubmenu.classList.remove('show');
-            }
-        });
-        
-        // Desktop hover behavior
-        if (window.innerWidth >= 992) {
-            contentMenuLink.addEventListener('mouseenter', function() {
-                contentSubmenu.classList.add('show');
-            });
-            
-            sidebar.addEventListener('mouseleave', function() {
-                contentSubmenu.classList.remove('show');
-            });
-            
-            contentSubmenu.addEventListener('mouseleave', function() {
-                contentSubmenu.classList.remove('show');
+            const dropdownToggles = document.querySelectorAll('.nav-link.has-dropdown');
+            dropdownToggles.forEach(toggle => {
+                toggle.setAttribute('aria-expanded', 'false');
             });
         }
         
-        // Close submenu on mobile when clicking a link
-        if (window.innerWidth < 992) {
-            document.querySelectorAll('.submenu-link').forEach(link => {
-                link.addEventListener('click', function() {
-                    contentSubmenu.classList.remove('show');
-                    closeMobileSidebar();
+        // Close dropdown when clicking outside (desktop)
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-item.dropdown')) {
+                if (window.innerWidth >= 992) {
+                    closeAllDropdowns();
+                }
+            }
+        });
+        
+        // Handle dropdown hover on desktop
+        if (window.innerWidth >= 992) {
+            const dropdownItems = document.querySelectorAll('.nav-item.dropdown');
+            
+            dropdownItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    if (!sidebar.classList.contains('collapsed')) {
+                        const dropdown = this.querySelector('.dropdown-menu-sidebar');
+                        const toggle = this.querySelector('.nav-link.has-dropdown');
+                        if (dropdown && toggle) {
+                            dropdown.classList.add('show');
+                            toggle.setAttribute('aria-expanded', 'true');
+                        }
+                    }
                 });
+                
+                item.addEventListener('mouseleave', function() {
+                    if (!sidebar.classList.contains('collapsed')) {
+                        const dropdown = this.querySelector('.dropdown-menu-sidebar');
+                        const toggle = this.querySelector('.nav-link.has-dropdown');
+                        if (dropdown && toggle) {
+                            dropdown.classList.remove('show');
+                            toggle.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+            });
+            
+            // For collapsed sidebar
+            sidebar.addEventListener('mouseenter', function() {
+                if (sidebar.classList.contains('collapsed')) {
+                    const dropdowns = document.querySelectorAll('.dropdown-menu-sidebar');
+                    dropdowns.forEach(dropdown => {
+                        dropdown.style.display = 'none';
+                    });
+                }
             });
         }
         
@@ -1255,24 +1237,28 @@
         // ========== ACTIVE MENU HIGHLIGHTING ==========
         document.addEventListener('DOMContentLoaded', function() {
             const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('.sidebar-menu .nav-link');
-            const submenuLinks = document.querySelectorAll('.submenu-link');
             
             // Check main nav links
+            const navLinks = document.querySelectorAll('.sidebar-menu .nav-link');
             navLinks.forEach(link => {
                 if (link.getAttribute('href') === currentPath) {
                     link.classList.add('active');
                 }
             });
             
-            // Check submenu links
-            submenuLinks.forEach(link => {
+            // Check dropdown links
+            const dropdownLinks = document.querySelectorAll('.dropdown-menu-sidebar .dropdown-item');
+            dropdownLinks.forEach(link => {
                 if (link.getAttribute('href') === currentPath) {
                     link.classList.add('active');
-                    // Open parent submenu if needed
-                    const parentSubmenu = link.closest('.submenu-container');
-                    if (parentSubmenu) {
-                        parentSubmenu.classList.add('show');
+                    // Open parent dropdown
+                    const dropdown = link.closest('.dropdown-menu-sidebar');
+                    if (dropdown) {
+                        dropdown.classList.add('show');
+                        const toggle = dropdown.previousElementSibling;
+                        if (toggle && toggle.classList.contains('has-dropdown')) {
+                            toggle.setAttribute('aria-expanded', 'true');
+                        }
                     }
                 }
             });
@@ -1376,11 +1362,52 @@
                 // Mobile: Ensure sidebar is hidden by default
                 sidebar.classList.remove('show');
                 sidebarBackdrop.classList.remove('show');
+                closeAllDropdowns();
             }
         }
         
         window.addEventListener('resize', handleResize);
         handleResize(); // Initial check
+        
+        // ========== FIX DROPDOWN ON CLICK (MOBILE) ==========
+        document.querySelectorAll('.nav-link.has-dropdown').forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                if (window.innerWidth < 992) {
+                    e.preventDefault();
+                    const dropdown = this.nextElementSibling;
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown-menu-sidebar').forEach(d => {
+                        if (d !== dropdown) {
+                            d.classList.remove('show');
+                        }
+                    });
+                    
+                    document.querySelectorAll('.nav-link.has-dropdown').forEach(t => {
+                        if (t !== this) {
+                            t.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    if (dropdown) {
+                        dropdown.classList.toggle('show');
+                        this.setAttribute('aria-expanded', !isExpanded);
+                    }
+                }
+            });
+        });
+        
+        // Close dropdown when clicking a link (mobile)
+        document.querySelectorAll('.dropdown-menu-sidebar .dropdown-item').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 992) {
+                    closeAllDropdowns();
+                    closeMobileSidebar();
+                }
+            });
+        });
     </script>
     
     {% block extra_js %}{% endblock %}
