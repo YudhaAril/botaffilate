@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Affiliate Manager - {{ app_name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Affiliate Manager</li>
+{% endblock %}
+
+{% block content %}
+<div class="affiliate-manager">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 fw-bold text-primary">
+                <i class="bi bi-person-badge"></i> Affiliate Manager
+            </h1>
+            <p class="text-muted mb-0">Kelola semua akun affiliate Anda di satu tempat</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('content_manager') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Kembali ke Content Manager
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Akun</h6>
+                            <h2 class="mb-0">{{ accounts|length }}</h2>
+                        </div>
+                        <i class="bi bi-people display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Konten</h6>
+                            <h2 class="mb-0">{{ total_content }}</h2>
+                        </div>
+                        <i class="bi bi-file-text display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Konten Aktif</h6>
+                            <h2 class="mb-0">{{ active_content }}</h2>
+                        </div>
+                        <i class="bi bi-check-circle display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Kategori</h6>
+                            <h2 class="mb-0">{{ categories|length }}</h2>
+                        </div>
+                        <i class="bi bi-tags display-6 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Affiliate Accounts Grid -->
+    <div class="row">
+        {% for account in accounts %}
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-gradient bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-circle"></i> {{ account }}
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{ account_stats[account]['total'] }} konten
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Account Statistics -->
+                    <div class="row g-2 mb-3">
+                        {% for category in categories %}
+                        {% set count = account_stats[account]['categories'].get(category, 0) %}
+                        {% if count > 0 %}
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                <span class="small">
+                                    <i class="bi bi-tag me-1"></i>{{ category }}
+                                </span>
+                                <span class="badge bg-secondary">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="row g-2">
+                        <div class="col-12 mb-2">
+                            <div class="d-grid">
+                                <a href="{{ url_for('affiliate_account', account=account) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Lihat Detail
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <div class="d-grid">
+                                <button class="btn btn-outline-success btn-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#addContentModal"
+                                        onclick="setAccount('{{ account }}')">
+                                    <i class="bi bi-plus"></i> Tambah Konten
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <div class="d-grid">
+                                <a href="{{ url_for('export', account=account, category='all') }}" 
+                                   class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-download"></i> Export
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> 
+                        {% if account_stats[account]['last_updated'] %}
+                        Diupdate: {{ account_stats[account]['last_updated']|format_datetime }}
+                        {% else %}
+                        Belum ada konten
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Aktivitas Terbaru</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activity %}
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activity %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <span class="badge bg-primary me-2">{{ activity.account }}</span>
+                                        {{ activity.category }}
+                                    </h6>
+                                    <p class="mb-1 text-muted small">
+                                        {{ activity.text[:80] }}{% if activity.text|length > 80 %}...{% endif %}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock"></i> {{ activity.created_at|calculate_time_ago }}
+                                    </small>
+                                </div>
+                                <a href="{{ url_for('manage', account=activity.account, category=activity.category) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <p class="mt-3">Belum ada aktivitas</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Content Modal -->
+<div class="modal fade" id="addContentModal" tabindex="-1" aria-labelledby="addContentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addContentModalLabel">
+                    <i class="bi bi-plus-circle"></i> Tambah Konten Baru
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addContentForm" action="{{ url_for('add_content') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="account" class="form-label">Akun Affiliate</label>
+                        <select class="form-select" id="account" name="account" required>
+                            <option value="">Pilih akun...</option>
+                            {% for account in accounts %}
+                            <option value="{{ account }}">{{ account }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Kategori</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="">Pilih kategori...</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Konten</label>
+                        <textarea class="form-control" id="content" name="content" rows="4" 
+                                  placeholder="Masukkan konten di sini..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">Tags (pisahkan dengan koma)</label>
+                        <input type="text" class="form-control" id="tags" name="tags" 
+                               placeholder="contoh: affiliate, marketing, tips">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="priority" class="form-label">Prioritas</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="low">Rendah</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="high">Tinggi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Simpan Konten
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1) !important;
+}
+
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.bg-gradient {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3) !important;
+}
+</style>
+
+<script>
+function setAccount(account) {
+    document.getElementById('account').value = account;
+}
+
+document.getElementById('addContentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('✅ Konten berhasil ditambahkan', 'success');
+            $('#addContentModal').modal('hide');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showToast('❌ ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        showToast('❌ Terjadi kesalahan', 'error');
+        console.error('Error:', error);
+    });
+});
+</script>
+{% endblock %}
